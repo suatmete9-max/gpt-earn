@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EarnApp - Make Money Daily</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 300px; margin-bottom: 20px;}
+        h1 { color: #333; }
+        .balance { font-size: 24px; color: #28a745; font-weight: bold; margin: 15px 0; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #0056b3; }
+        .google-btn { background: #db4437; width: 100%; }
+        .google-btn:hover { background: #c23321; }
+        .offerwall { padding: 20px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeeba; }
+        /* Shuru mein app hide rahegi jab tak login na ho */
+        #appSection { display: none; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SECTION -->
+    <div class="card" id="loginSection">
+        <h2>Login to EarnApp</h2>
+        <p>Sign in to start earning points!</p>
+        <button class="google-btn" id="loginBtn">Sign in with Google</button>
+    </div>
+
+    <!-- 2. MAIN APP SECTION (Hidden before login) -->
+    <div id="appSection">
+        <div class="card">
+            <h1>Welcome, <span id="userName">User</span>!</h1>
+            <p>Your Current Balance:</p>
+            <div class="balance">🪙 <span id="balanceDisplay">Loading...</span> Points</div>
+            <button onclick="fetchBalance()">Refresh Balance</button>
+            <button onclick="logout()" style="background: #e74c3c;">Logout</button>
+        </div>
+
+        <div class="card offerwall">
+            <h3>📋 Today's Offers</h3>
+            <button onclick="simulateSurveyCompletion()">Complete Survey (+50 Pts)</button>
+        </div>
+
+        <div class="card">
+            <h3>💸 Withdraw to UPI</h3>
+            <input type="text" id="upiId" placeholder="Enter your UPI ID" style="padding: 10px; width: 80%; margin-bottom: 10px;">
+            <br>
+            <input type="number" id="withdrawPoints" placeholder="Points to withdraw" style="padding: 10px; width: 80%; margin-bottom: 10px;">
+            <br>
+            <button onclick="requestWithdrawal()" style="background: #28a745;">Withdraw Now</button>
+        </div>
+    </div>
+
+    <!-- FIREBASE KE MODULES -->
+    <script type="module">
+        // Firebase ke tools import kar rahe hain
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+
+        // YAHAN APNA FIREBASE CONFIG PASTE KARO (Sirf andar ka hissa)
+       const firebaseConfig = {
+  apiKey: "AIzaSyCs52ax8k_-k4vXz12po33UhUEjuVzE-Os",
+  authDomain: "gpt-earn-e836f.firebaseapp.com",
+  databaseURL: "https://gpt-earn-e836f-default-rtdb.firebaseio.com",
+  projectId: "gpt-earn-e836f",
+  storageBucket: "gpt-earn-e836f.firebasestorage.app",
+  messagingSenderId: "980120711328",
+  appId: "1:980120711328:web:a7424c1e7622ca0e85d9c5",
+  measurementId: "G-DRD65JPCB1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const provider = new GoogleAuthProvider();
+
+        // UI Elements
+        const loginSection = document.getElementById("loginSection");
+        const appSection = document.getElementById("appSection");
+        const loginBtn = document.getElementById("loginBtn");
+        const userNameDisplay = document.getElementById("userName");
+
+        // Global variables for backend logic
+        window.userId = null; 
+        const backendUrl = "http://localhost:5000";
+
+        // 1. Google Login ka function
+        loginBtn.addEventListener("click", () => {
+            signInWithPopup(auth, provider).catch(error => alert(error.message));
+        });
+
+        // 2. Logout ka function
+        window.logout = () => {
+            signOut(auth).then(() => {
+                loginSection.style.display = "inline-block";
+                appSection.style.display = "none";
+            });
+        };
+
+        // 3. User Login/Logout status check karna
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // User logged in hai
+                loginSection.style.display = "none";
+                appSection.style.display = "block";
+                
+                // Humari purani 'user123' ki jagah ab asli Google ID use hogi!
+                window.userId = user.uid; 
+                userNameDisplay.innerText = user.displayName;
+                
+                // Balance fetch karo
+                window.fetchBalance();
+            } else {
+                // User logged out hai
+                loginSection.style.display = "inline-block";
+                appSection.style.display = "none";
+            }
+        });
+
+        // --- BACKEND FUNCTIONS (Jo pehle the, bas global banaye hain) ---
+        window.fetchBalance = async () => {
+            if(!window.userId) return;
+            const res = await fetch(`${backendUrl}/api/balance/${window.userId}`);
+            const data = await res.json();
+            document.getElementById("balanceDisplay").innerText = data.balance || 0;
+        };
+
+        window.simulateSurveyCompletion = async () => {
+            await fetch(`${backendUrl}/api/postback?userId=${window.userId}&reward=50`);
+            alert("🎉 Survey Completed! 50 Points Added.");
+            window.fetchBalance();
+        };
+
+        window.requestWithdrawal = async () => {
+            const upiId = document.getElementById("upiId").value;
+            const points = document.getElementById("withdrawPoints").value;
+            if (!upiId || !points) return alert("Enter details!");
+
+            const res = await fetch(`${backendUrl}/api/withdraw`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: window.userId, upiId, points: Number(points) })
+            });
+            const result = await res.json();
+            alert(result.success ? "✅ " + result.message : "❌ " + result.message);
+            window.fetchBalance();
+        };
+    </script>
+</body>
+</html>

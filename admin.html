@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Earning App</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #2c3e50; color: white; padding: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #34495e; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #7f8c8d; }
+        th { background-color: #e74c3c; }
+        button { background: #2ecc71; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; }
+        button:hover { background: #27ae60; }
+    </style>
+</head>
+<body>
+
+    <h1>👑 Admin Dashboard</h1>
+    <p>Pending Withdrawal Requests:</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>UPI ID</th>
+                <th>Points Requested</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="requestTableBody">
+            <!-- Data yahan JavaScript se aayega -->
+        </tbody>
+    </table>
+
+    <script>
+        const backendUrl = "http://localhost:5000";
+
+        // Pending requests server se laana
+        async function fetchRequests() {
+            try {
+                const response = await fetch(`${backendUrl}/api/admin/withdrawals`);
+                const requests = await response.json();
+                
+                const tableBody = document.getElementById('requestTableBody');
+                tableBody.innerHTML = ''; // Purana data saaf karo
+
+                if(requests.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No pending requests! 🎉</td></tr>';
+                    return;
+                }
+
+                requests.forEach(req => {
+                    const row = `<tr>
+                        <td>${req.userId}</td>
+                        <td style="font-weight:bold; color:#f1c40f;">${req.upiId}</td>
+                        <td>${req.pointsRequested} Points (₹${req.pointsRequested / 10})</td>
+                        <td><button onclick="approveRequest('${req.id}')">Mark as Paid</button></td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (error) {
+                console.error("Error fetching requests:", error);
+            }
+        }
+
+        // Request ko Paid (Approve) karna
+        async function approveRequest(requestId) {
+            if(!confirm("Kya aapne sach mein UPI par paise bhej diye hain?")) return;
+
+            try {
+                const response = await fetch(`${backendUrl}/api/admin/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requestId: requestId })
+                });
+
+                const result = await response.json();
+                if(result.success) {
+                    alert("✅ Request Approved and Marked as Paid!");
+                    fetchRequests(); // Table update karo
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        }
+
+        // Page load hote hi data fetch karo
+        fetchRequests();
+    </script>
+</body>
+</html>
