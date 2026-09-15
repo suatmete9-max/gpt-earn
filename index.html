@@ -39,7 +39,7 @@
 
         <div class="card offerwall">
             <h3>📋 Today's Offers</h3>
-            <button onclick="simulateSurveyCompletion()">Complete Survey (+50 Pts)</button>
+            <button onclick="openCpxOfferwall()" style="background: #ff9800; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">📋 Open Survey Wall</button>
         </div>
 
         <div class="card">
@@ -59,15 +59,15 @@
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
         // YAHAN APNA FIREBASE CONFIG PASTE KARO (Sirf andar ka hissa)
-       const firebaseConfig = {
-  apiKey: "AIzaSyCs52ax8k_-k4vXz12po33UhUEjuVzE-Os",
-  authDomain: "gpt-earn-e836f.firebaseapp.com",
-  databaseURL: "https://gpt-earn-e836f-default-rtdb.firebaseio.com",
-  projectId: "gpt-earn-e836f",
-  storageBucket: "gpt-earn-e836f.firebasestorage.app",
-  messagingSenderId: "980120711328",
-  appId: "1:980120711328:web:a7424c1e7622ca0e85d9c5",
-  measurementId: "G-DRD65JPCB1"
+        const firebaseConfig = {
+            apiKey: "AIzaSyCs52ax8k_-k4vXz12po33UhUEjuVzE-Os",
+            authDomain: "gpt-earn-e836f.firebaseapp.com",
+            databaseURL: "https://gpt-earn-e836f-default-rtdb.firebaseio.com",
+            projectId: "gpt-earn-e836f",
+            storageBucket: "gpt-earn-e836f.firebasestorage.app",
+            messagingSenderId: "980120711328",
+            appId: "1:980120711328:web:a7424c1e7622ca0e85d9c5",
+            measurementId: "G-DRD65JPCB1"
         };
 
         // Initialize Firebase
@@ -118,18 +118,27 @@
             }
         });
 
-        // --- BACKEND FUNCTIONS (Jo pehle the, bas global banaye hain) ---
+        // --- BACKEND FUNCTIONS ---
         window.fetchBalance = async () => {
             if(!window.userId) return;
-            const res = await fetch(`${backendUrl}/api/balance/${window.userId}`);
-            const data = await res.json();
-            document.getElementById("balanceDisplay").innerText = data.balance || 0;
+            try {
+                const res = await fetch(`${backendUrl}/api/balance/${window.userId}`);
+                const data = await res.json();
+                document.getElementById("balanceDisplay").innerText = data.balance || 0;
+            } catch (error) {
+                console.error("Balance fetch error:", error);
+            }
         };
 
-        window.simulateSurveyCompletion = async () => {
-            await fetch(`${backendUrl}/api/postback?userId=${window.userId}&reward=50`);
-            alert("🎉 Survey Completed! 50 Points Added.");
-            window.fetchBalance();
+        // ASLI CPX SURVEY FUNCTION
+        window.openCpxOfferwall = () => {
+            if(!window.userId) {
+                alert("Please login first!");
+                return;
+            }
+            // Aapka CPX App ID 36234 yahan lag gaya hai!
+            const cpxUrl = `https://offers.cpx-research.com/index.php?app_id=36234&ext_user_id=${window.userId}`;
+            window.open(cpxUrl, '_blank'); 
         };
 
         window.requestWithdrawal = async () => {
@@ -137,14 +146,18 @@
             const points = document.getElementById("withdrawPoints").value;
             if (!upiId || !points) return alert("Enter details!");
 
-            const res = await fetch(`${backendUrl}/api/withdraw`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: window.userId, upiId, points: Number(points) })
-            });
-            const result = await res.json();
-            alert(result.success ? "✅ " + result.message : "❌ " + result.message);
-            window.fetchBalance();
+            try {
+                const res = await fetch(`${backendUrl}/api/withdraw`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: window.userId, upiId, points: Number(points) })
+                });
+                const result = await res.json();
+                alert(result.success ? "✅ " + result.message : "❌ " + result.message);
+                window.fetchBalance();
+            } catch(error) {
+                console.error("Withdraw error:", error);
+            }
         };
     </script>
 </body>
