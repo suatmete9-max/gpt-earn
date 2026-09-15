@@ -9,12 +9,11 @@
         .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 300px; margin-bottom: 20px;}
         h1 { color: #333; }
         .balance { font-size: 24px; color: #28a745; font-weight: bold; margin: 15px 0; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; width: 90%; }
         button:hover { background: #0056b3; }
         .google-btn { background: #db4437; width: 100%; }
         .google-btn:hover { background: #c23321; }
         .offerwall { padding: 20px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeeba; }
-        /* Shuru mein app hide rahegi jab tak login na ho */
         #appSection { display: none; }
     </style>
 </head>
@@ -27,7 +26,7 @@
         <button class="google-btn" id="loginBtn">Sign in with Google</button>
     </div>
 
-    <!-- 2. MAIN APP SECTION (Hidden before login) -->
+    <!-- 2. MAIN APP SECTION -->
     <div id="appSection">
         <div class="card">
             <h1>Welcome, <span id="userName">User</span>!</h1>
@@ -38,8 +37,9 @@
         </div>
 
         <div class="card offerwall">
-            <h3>📋 Today's Offers</h3>
-            <button onclick="openCpxOfferwall()" style="background: #ff9800; color: white; font-weight: bold; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">📋 Open Survey Wall</button>
+            <h3>📋 Earning Walls</h3>
+            <button onclick="openCpxOfferwall()" style="background: #ff9800; font-weight: bold;">📋 Open Surveys (CPX)</button>
+            <button onclick="openTimewall()" style="background: #3498db; font-weight: bold;">⏱️ Open Timewall Tasks</button>
         </div>
 
         <div class="card">
@@ -52,13 +52,11 @@
         </div>
     </div>
 
-    <!-- FIREBASE KE MODULES -->
+    <!-- FIREBASE & APP LOGIC -->
     <script type="module">
-        // Firebase ke tools import kar rahe hain
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
 
-        // YAHAN APNA FIREBASE CONFIG PASTE KARO (Sirf andar ka hissa)
         const firebaseConfig = {
             apiKey: "AIzaSyCs52ax8k_-k4vXz12po33UhUEjuVzE-Os",
             authDomain: "gpt-earn-e836f.firebaseapp.com",
@@ -70,27 +68,22 @@
             measurementId: "G-DRD65JPCB1"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const provider = new GoogleAuthProvider();
 
-        // UI Elements
         const loginSection = document.getElementById("loginSection");
         const appSection = document.getElementById("appSection");
         const loginBtn = document.getElementById("loginBtn");
         const userNameDisplay = document.getElementById("userName");
 
-        // Global variables for backend logic
         window.userId = null; 
         const backendUrl = "https://earnapp-backend.onrender.com";
 
-        // 1. Google Login ka function
         loginBtn.addEventListener("click", () => {
             signInWithPopup(auth, provider).catch(error => alert(error.message));
         });
 
-        // 2. Logout ka function
         window.logout = () => {
             signOut(auth).then(() => {
                 loginSection.style.display = "inline-block";
@@ -98,27 +91,19 @@
             });
         };
 
-        // 3. User Login/Logout status check karna
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // User logged in hai
                 loginSection.style.display = "none";
                 appSection.style.display = "block";
-                
-                // Humari purani 'user123' ki jagah ab asli Google ID use hogi!
                 window.userId = user.uid; 
                 userNameDisplay.innerText = user.displayName;
-                
-                // Balance fetch karo
                 window.fetchBalance();
             } else {
-                // User logged out hai
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
             }
         });
 
-        // --- BACKEND FUNCTIONS ---
         window.fetchBalance = async () => {
             if(!window.userId) return;
             try {
@@ -130,15 +115,25 @@
             }
         };
 
-        // ASLI CPX SURVEY FUNCTION
+        // CPX SURVEY WALL
         window.openCpxOfferwall = () => {
             if(!window.userId) {
                 alert("Please login first!");
                 return;
             }
-            // Aapka CPX App ID 36234 yahan lag gaya hai!
             const cpxUrl = `https://offers.cpx-research.com/index.php?app_id=36234&ext_user_id=${window.userId}`;
             window.open(cpxUrl, '_blank'); 
+        };
+
+        // TIMEWALL TASKS WALL
+        window.openTimewall = () => {
+            if(!window.userId) {
+                alert("Please login first!");
+                return;
+            }
+            const timewallId = "d57be0419c06b19f";
+            const timewallUrl = `https://timewall.io/how-it-works?user_id=${window.userId}&placement_id=${timewallId}`;
+            window.open(timewallUrl, '_blank'); 
         };
 
         window.requestWithdrawal = async () => {
