@@ -147,6 +147,9 @@
         window.userId = null; 
         const backendUrl = "https://earnapp-backend.onrender.com";
 
+        // Global interval variable taaki logout hone par purana timer ruk jaye
+        window.adTimerInterval = null;
+
         loginBtn.addEventListener("click", () => {
             signInWithPopup(auth, provider).catch(error => alert(error.message));
         });
@@ -155,6 +158,9 @@
             signOut(auth).then(() => {
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
+                window.userId = null;
+                // Logout hote hi pichle user ka timer interval stop kar do
+                if(window.adTimerInterval) clearInterval(window.adTimerInterval);
             });
         };
 
@@ -164,21 +170,31 @@
                 appSection.style.display = "block";
                 window.userId = user.uid; 
                 userNameDisplay.innerText = user.displayName;
+                
                 window.fetchBalance();
                 window.loadTransactions();
+                // User login hote hi uska personal Ad Status check hoga
+                window.checkAdStatus();
             } else {
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
             }
         });
 
-        // ---------------- INSTANT AD BOX LOGIC ---------------- //
+        // ---------------- INSTANT AD BOX LOGIC (USER SPECIFIC) ---------------- //
         
         const monetagLink = "https://omg10.com/4/11740471"; 
         const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
 
         window.checkAdStatus = () => {
-            const cooldownTime = localStorage.getItem("adCooldownEnd");
+            // Agar user login nahi hai, toh kuch mat karo
+            if (!window.userId) return;
+
+            // Har user ke liye uski ID ke sath alag naam se save hoga
+            const cooldownKey = `adCooldownEnd_${window.userId}`;
+            const stepKey = `adStep_${window.userId}`;
+
+            const cooldownTime = localStorage.getItem(cooldownKey);
             const btn = document.getElementById("watchAdBtn");
             const statusText = document.getElementById("adStatusText");
             const timerDisplay = document.getElementById("adTimerDisplay");
@@ -188,20 +204,23 @@
             countdownText.style.display = "none";
             claimBtn.style.display = "none";
 
+            // Purana chal raha koi bhi interval clear kar do
+            if(window.adTimerInterval) clearInterval(window.adTimerInterval);
+
             if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
                 btn.style.display = "none";
                 statusText.innerText = "⏳ Next Ads Locked (12 Hours Gap)";
                 timerDisplay.style.display = "block";
                 
-                const interval = setInterval(() => {
+                window.adTimerInterval = setInterval(() => {
                     const now = Date.now();
                     const distance = parseInt(cooldownTime) - now;
                     
                     if (distance <= 0) {
-                        clearInterval(interval);
-                        localStorage.removeItem("adCooldownEnd");
-                        localStorage.setItem("adStep", "1");
-                        window.checkAdStatus();
+                        clearInterval(window.adTimerInterval);
+                        localStorage.removeItem(cooldownKey);
+                        localStorage.setItem(stepKey, "1");
+                        window.checkAdStatus(); // Timer end par khud refresh ho jayega
                     } else {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -213,7 +232,7 @@
                 btn.style.display = "inline-block";
                 timerDisplay.style.display = "none";
                 
-                let step = localStorage.getItem("adStep") || "1";
+                let step = localStorage.getItem(stepKey) || "1";
                 if (step === "1") {
                     statusText.innerText = "🟢 Available: Premium Ad (1/2)";
                     btn.innerText = "▶ Watch Ad & Earn ₹2";
@@ -227,7 +246,8 @@
         window.startAdTimer = () => {
             if(!window.userId) return alert("Please login first to watch ads!");
 
-            let step = localStorage.getItem("adStep") || "1";
+            const stepKey = `adStep_${window.userId}`;
+            let step = localStorage.getItem(stepKey) || "1";
             let adLink = (step === "1") ? monetagLink : adsterraLink;
             
             window.open(adLink, "_blank");
@@ -251,7 +271,12 @@
         };
 
         window.claimAdReward = async () => {
-            let step = localStorage.getItem("adStep") || "1";
+            if(!window.userId) return;
+
+            const stepKey = `adStep_${window.userId}`;
+            const cooldownKey = `adCooldownEnd_${window.userId}`;
+            
+            let step = localStorage.getItem(stepKey) || "1";
             const rewardCoins = 40; 
 
             try {
@@ -270,29 +295,27 @@
                     window.fetchBalance();       
                     window.loadTransactions();   
                 } else {
-                    // Custom Alert set per user request
                     alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
                 }
             } catch (error) {
                 console.error("Error adding coins:", error);
-                // Custom Alert set per user request
                 alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
             }
 
+            // Sirf current user ka step aage badhao ya lock karo
             if (step === "1") {
-                localStorage.setItem("adStep", "2");
+                localStorage.setItem(stepKey, "2");
                 window.checkAdStatus();
             } else if (step === "2") {
                 const twelveHoursInMs = 12 * 60 * 60 * 1000;
-                localStorage.setItem("adCooldownEnd", Date.now() + twelveHoursInMs);
-                localStorage.setItem("adStep", "1"); 
+                localStorage.setItem(cooldownKey, Date.now() + twelveHoursInMs);
+                localStorage.setItem(stepKey, "1"); 
                 window.checkAdStatus();
             }
         };
 
-        document.addEventListener("DOMContentLoaded", () => {
-            setTimeout(() => window.checkAdStatus(), 1000);
-        });
+        // DOM load hone par error bachane ke liye pehle delay wait tha,
+        // Ab zarurat nahi kyunki onAuthStateChanged khud call karega.
 
         // ---------------- OLD BALANCE AND WITHDRAWAL LOGIC ---------------- //
         window.fetchBalance = async () => {
