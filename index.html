@@ -192,7 +192,7 @@
             window.open(`https://api.adgem.com/v1/wall?appid=33567&playerid=${window.userId}`, '_blank');
         };
 
-        // FIXED: Withdrawal function jo exact IDs ('destinationInput' aur 'withdrawPoints') uthayega
+        // NEW UPDATED WITHDRAWAL FUNCTION
         window.requestWithdrawal = async () => {
             const method = document.getElementById("withdrawMethod").value;
             const destElement = document.getElementById("destinationInput");
@@ -206,8 +206,9 @@
             const destination = destElement.value.trim();
             const points = pointsElement.value.trim();
             
-            if (!destination || !points) {
-                alert("UPI ID aur Points daalna zaroori hai!");
+            // Yahan naya error message laga diya hai test karne ke liye
+            if (destination === "" || points === "") {
+                alert("⚠️ Error: UPI ID aur Points dono box bharna zaroori hai!");
                 return;
             }
 
