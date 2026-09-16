@@ -3,17 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EarnApp - Make Money Daily</title>
+    <title>EarnApp - Make Money Daily & Earn Crypto</title>
+    <!-- SEO Meta Tags for Google Search Top Ranking -->
+    <meta name="description" content="Earn money online by completing surveys, tasks, and offers. Instant payout via UPI and Crypto USDT BEP20." />
+    <meta name="keywords" content="gpt site, make money online, cpx research, timewall, survey rewards, crypto earnings, usdt bep20" />
+    <meta name="author" content="EarnApp" />
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 300px; margin-bottom: 20px;}
-        h1 { color: #333; }
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; background-color: #f4f4f9; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 320px; margin-bottom: 20px; vertical-align: top; }
+        h1 { color: #333; font-size: 22px; }
         .balance { font-size: 24px; color: #28a745; font-weight: bold; margin: 15px 0; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; width: 90%; }
         button:hover { background: #0056b3; }
         .google-btn { background: #db4437; width: 100%; }
         .google-btn:hover { background: #c23321; }
         .offerwall { padding: 20px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeeba; }
+        input, select { padding: 10px; width: 85%; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+        table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
+        th { background-color: #007bff; color: white; }
         #appSection { display: none; }
     </style>
 </head>
@@ -31,8 +39,9 @@
         <div class="card">
             <h1>Welcome, <span id="userName">User</span>!</h1>
             <p>Your Current Balance:</p>
-            <div class="balance">🪙 <span id="balanceDisplay">Loading...</span> Points</div>
+            <div class="balance">🪙 <span id="balanceDisplay">Loading...</span> Coins</div>
             <button onclick="fetchBalance()">Refresh Balance</button>
+            <button onclick="loadTransactions()" style="background: #17a2b8;">View History</button>
             <button onclick="logout()" style="background: #e74c3c;">Logout</button>
         </div>
 
@@ -43,14 +52,40 @@
         </div>
 
         <div class="card">
-            <h3>💸 Withdraw to UPI</h3>
-            <input type="text" id="upiId" placeholder="Enter your UPI ID" style="padding: 10px; width: 80%; margin-bottom: 10px;">
-            <br>
-            <input type="number" id="withdrawPoints" placeholder="Points to withdraw" style="padding: 10px; width: 80%; margin-bottom: 10px;">
-            <br>
+            <h3>💸 Withdraw Funds</h3>
+            <select id="withdrawMethod" onchange="updateWithdrawPlaceholder()">
+                <option value="UPI">UPI (Min. 778 Coins = ₹100)</option>
+                <option value="USDT">Crypto USDT BEP20 (Min. 700 Coins = $1)</option>
+            </select>
+            <input type="text" id="destinationInput" placeholder="Enter UPI ID (e.g. user@oksbi)">
+            <input type="number" id="withdrawPoints" placeholder="Enter Coins to Withdraw">
             <button onclick="requestWithdrawal()" style="background: #28a745;">Withdraw Now</button>
         </div>
+
+        <!-- TRANSACTION HISTORY SECTION -->
+        <div class="card" style="width: 95%; max-width: 680px;">
+            <h3>📜 Credit & Debit History</h3>
+            <div style="max-height: 200px; overflow-y: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Coins</th>
+                            <th>Description / Status</th>
+                            <th>Time</th>
+                        </tr>
+                    스와<tbody id="historyTableBody">
+                        <tr><td colspan="4">Click 'View History' to load</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    <!-- FOOTER WITH LEGAL LINKS -->
+    <footer style="margin-top: 30px; padding: 20px; color: #666; font-size: 14px;">
+        Privacy Policy | Terms of Service | Contact Us
+    </footer>
 
     <!-- FIREBASE & APP LOGIC -->
     <script type="module">
@@ -98,6 +133,7 @@
                 window.userId = user.uid; 
                 userNameDisplay.innerText = user.displayName;
                 window.fetchBalance();
+                window.loadTransactions();
             } else {
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
@@ -115,48 +151,80 @@
             }
         };
 
-        // CPX SURVEY WALL
-        window.openCpxOfferwall = () => {
-            if(!window.userId) {
-                alert("Please login first!");
-                return;
+        window.updateWithdrawPlaceholder = () => {
+            const method = document.getElementById("withdrawMethod").value;
+            const destInput = document.getElementById("destinationInput");
+            if (method === "UPI") {
+                destInput.placeholder = "Enter UPI ID (e.g. user@oksbi)";
+            } else {
+                destInput.placeholder = "Enter USDT BEP20 Wallet Address";
             }
-            const cpxUrl = `https://offers.cpx-research.com/index.php?app_id=36234&ext_user_id=${window.userId}`;
-            window.open(cpxUrl, '_blank'); 
         };
 
-        // TIMEWALL TASKS WALL
+        window.openCpxOfferwall = () => {
+            if(!window.userId) return alert("Please login first!");
+            window.open(`https://offers.cpx-research.com/index.php?app_id=36234&ext_user_id=${window.userId}`, '_blank'); 
+        };
+
         window.openTimewall = () => {
-            if(!window.userId) {
-                alert("Please login first!");
-                return;
-            }
-            const timewallId = "d57be0419c06b19f";
-            const timewallUrl = `https://timewall.io/how-it-works?user_id=${window.userId}&placement_id=${timewallId}`;
-            window.open(timewallUrl, '_blank'); 
+            if(!window.userId) return alert("Please login first!");
+            window.open(`https://timewall.io/how-it-works?user_id=${window.userId}&placement_id=d57be0419c06b19f`, '_blank'); 
         };
 
         window.requestWithdrawal = async () => {
-            const upiId = document.getElementById("upiId").value;
+            const method = document.getElementById("withdrawMethod").value;
+            const destination = document.getElementById("destinationInput").value;
             const points = document.getElementById("withdrawPoints").value;
-            if (!upiId || !points) return alert("Enter details!");
+            
+            if (!destination || !points) return alert("Please fill all details!");
 
             try {
                 const res = await fetch(`${backendUrl}/api/withdraw`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: window.userId, upiId, points: Number(points) })
+                    body: JSON.stringify({ userId: window.userId, method, destination, points: Number(points) })
                 });
                 const result = await res.json();
                 alert(result.success ? "✅ " + result.message : "❌ " + result.message);
                 window.fetchBalance();
+                window.loadTransactions();
             } catch(error) {
                 console.error("Withdraw error:", error);
+                alert("Withdrawal failed due to network error.");
+            }
+        };
+
+        window.loadTransactions = async () => {
+            if(!window.userId) return;
+            try {
+                const res = await fetch(`${backendUrl}/api/transactions/${window.userId}`);
+                const data = await res.json();
+                const tbody = document.getElementById("historyTableBody");
+                tbody.innerHTML = "";
+
+                const keys = Object.keys(data).reverse();
+                if(keys.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4">No transactions found</td></tr>`;
+                    return;
+                }
+
+                keys.forEach(key => {
+                    const tx = data[key];
+                    const dateStr = new Date(tx.timestamp).toLocaleDateString();
+                    const color = tx.type === 'CREDIT' ? 'color: green; font-weight: bold;' : 'color: red; font-weight: bold;';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="${color}">${tx.type}</td>
+                            <td>${tx.amount} Coins</td>
+                            <td>${tx.description}</td>
+                            <td>${dateStr}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                console.error("History load error:", error);
             }
         };
     </script>
 </body>
 </html>
-<footer style="margin-top: 40px; padding: 20px; color: #666; font-size: 14px;">
-    Privacy Policy | Terms of Service | Contact Us
-</footer>
