@@ -60,7 +60,7 @@
             <h3>💸 Withdraw Funds</h3>
             <select id="withdrawMethod" onchange="updateWithdrawPlaceholder()">
                 <option value="UPI">UPI (Min. 778 Coins = ₹100)</option>
-                <option value="USDT">Crypto USDT BEP20 (Min. 700 Coins = $1)</option>
+                <option value="USDT">Crypto USDT BEP20 (Min. 800 Coins = $1)</option>
             </select>
             <input type="text" id="destinationInput" placeholder="Enter UPI ID (e.g. user@oksbi)">
             <input type="number" id="withdrawPoints" placeholder="Enter Coins to Withdraw">
@@ -159,7 +159,7 @@ window.fetchBalance = async () => {
         // 778 coins = 100 INR -> 1 coin = 100 / 778 = 0.1285 INR
         const inrValue = (coins * (100 / 778)).toFixed(2);
         
-        // 700 coins = 1 USDT -> 1 coin = 1 / 800 = 0.001428 USDT
+        // 800 coins = 1 USDT -> 1 coin = 1 / 800 = 0.001428 USDT
         const usdtValue = (coins / 800).toFixed(2);
 
         document.getElementById("inrDisplay").innerText = inrValue;
@@ -260,6 +260,30 @@ window.fetchBalance = async () => {
                 console.error("History load error:", error);
             }
         };
+        window.fetchBalance = async () => {
+    if (!window.userId) return;
+    try {
+        const response = await fetch(`${backendUrl}/api/balance/${window.userId}`);
+        const data = await response.json();
+        const coins = data.balance || 0;
+
+        // 1. Coins update karo
+        document.getElementById("balanceDisplay").innerText = coins;
+
+        // 2. INR aur USDT automatic calculate karo
+        // 778 coins = ₹100
+        const inrVal = (coins * (100 / 778)).toFixed(2);
+        // 800 coins = $1 USDT
+        const usdtVal = (coins / 800).toFixed(2);
+
+        // 3. Screen par values push karo
+        document.getElementById("inrDisplay").innerText = inrVal;
+        document.getElementById("usdtDisplay").innerText = usdtVal;
+
+    } catch (error) {
+        console.error("Error fetching balance:", error);
+    }
+};
     </script>
 </body>
 </html>
