@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="google-site-verification" content="Vi8Xq5qoqQ7SJP-Ap1Hl1-mlkviaOk0fN9P4-4a0BBc" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EarnApp - Make Money Daily & Earn Crypto</title>
     <!-- SEO Meta Tags for Google Search Top Ranking -->
+    <meta name="google-site-verification" content="Vi8Xq5qoqQ7SJP-Ap1Hl1-mlkviaOk0fN9P4-4a0BBc" />
     <meta name="description" content="Earn money online by completing surveys, tasks, and offers. Instant payout via UPI and Crypto USDT BEP20." />
-    <meta name="keywords" content="gpt site, make money online, cpx research, timewall, survey rewards, crypto earnings, usdt bep20" />
+    <meta name="keywords" content="gpt site, make money online, cpx research, timewall, adgem, survey rewards, crypto earnings, usdt bep20" />
     <meta name="author" content="EarnApp" />
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; background-color: #f4f4f9; }
@@ -50,13 +50,14 @@
             <h3>📋 Earning Walls</h3>
             <button onclick="openCpxOfferwall()" style="background: #ff9800; font-weight: bold;">📋 Open Surveys (CPX)</button>
             <button onclick="openTimewall()" style="background: #3498db; font-weight: bold;">⏱️ Open Timewall Tasks</button>
+            <button onclick="openAdgem()" style="background: #9b59b6; font-weight: bold;">🎮 Open Games & Apps (AdGem)</button>
         </div>
 
         <div class="card">
             <h3>💸 Withdraw Funds</h3>
             <select id="withdrawMethod" onchange="updateWithdrawPlaceholder()">
                 <option value="UPI">UPI (Min. 778 Coins = ₹100)</option>
-                <option value="USDT">Crypto USDT BEP20 (Min. 800 Coins = $1)</option>
+                <option value="USDT">Crypto USDT BEP20 (Min. 700 Coins = $1)</option>
             </select>
             <input type="text" id="destinationInput" placeholder="Enter UPI ID (e.g. user@oksbi)">
             <input type="number" id="withdrawPoints" placeholder="Enter Coins to Withdraw">
@@ -75,7 +76,8 @@
                             <th>Description / Status</th>
                             <th>Time</th>
                         </tr>
-                    스와<tbody id="historyTableBody">
+                    </thead>
+                    <tbody id="historyTableBody">
                         <tr><td colspan="4">Click 'View History' to load</td></tr>
                     </tbody>
                 </table>
@@ -170,6 +172,11 @@
         window.openTimewall = () => {
             if(!window.userId) return alert("Please login first!");
             window.open(`https://timewall.io/how-it-works?user_id=${window.userId}&placement_id=d57be0419c06b19f`, '_blank'); 
+        };
+
+        window.openAdgem = () => {
+            if(!window.userId) return alert("Please login first!");
+            window.open(`https://wall.adgem.com/?appid=33567&playerid=${window.userId}`, '_blank');
         };
 
         window.requestWithdrawal = async () => {
