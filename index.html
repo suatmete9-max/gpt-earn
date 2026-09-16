@@ -146,7 +146,7 @@
             }
         });
 
-        // Clean & Single Fetch Balance Function with Calculation
+        // Fetch Balance & 50% Margin Calculation Function
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -154,12 +154,13 @@
                 const data = await response.json();
                 const coins = data.balance || 0;
 
-                // 1. Coins update karo
+                // 1. Coins 100% pure show honge
                 document.getElementById("balanceDisplay").innerText = coins;
 
-                // 2. INR aur USDT automatic calculate karo
-                const inrVal = (coins * (100 / 2000)).toFixed(2);
-                const usdtVal = (coins / 2000).toFixed(2);
+                // 2. INR aur USDT ke liye 50% Margin Calculation (2000 coins = $1 base, uska 50% user value)
+                const totalUsd = coins / 2000;
+                const usdtVal = (totalUsd * 0.50).toFixed(2); // 50% user share USDT
+                const inrVal = (usdtVal * 83).toFixed(2);      // USDT to INR ($1 = ₹83)
 
                 // 3. Screen par values push karo
                 document.getElementById("inrDisplay").innerText = inrVal;
@@ -197,10 +198,13 @@
 
         window.requestWithdrawal = async () => {
             const method = document.getElementById("withdrawMethod").value;
-            const destination = document.getElementById("destinationInput").value;
-            const points = document.getElementById("withdrawPoints").value;
+            const destination = document.getElementById("destinationInput").value.trim();
+            const points = document.getElementById("withdrawPoints").value.trim();
             
-            if (!destination || !points) return alert("Please fill all details!");
+            if (!destination || !points) {
+                alert("UPI ID aur Points daalna zaroori hai!");
+                return;
+            }
 
             try {
                 const res = await fetch(`${backendUrl}/api/withdraw`, {
