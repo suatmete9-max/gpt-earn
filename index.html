@@ -175,9 +175,10 @@
         };
 
         window.openAdgem = () => {
-            if(!window.userId) return alert("Please login first!");
-            window.open(`https://offerwall.adgem.com/?appid=33567&playerid=${window.userId}`, '_blank');
-        };
+    if(!window.userId) return alert("Please login first!");
+    window.open(`https://api.adgem.com/v1/wall?appid=33567&playerid=${window.userId}`, '_blank');
+};
+        
 
         window.requestWithdrawal = async () => {
             const method = document.getElementById("withdrawMethod").value;
