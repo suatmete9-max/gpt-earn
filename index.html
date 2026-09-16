@@ -4,8 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EarnApp - Make Money Daily & Earn Crypto</title>
-    <!-- SEO Meta Tags for Google Search Top Ranking -->
+    
+    <!-- Google Search Console Verification -->
     <meta name="google-site-verification" content="Vi8Xq5qoqQ7SJP-Ap1Hl1-mlkviaOk0fN9P4-4a0BBc" />
+    
+    <!-- 🟢 MONETAG VERIFICATION TAG -->
+    <meta name="monetag" content="dcd725b774f1602ee3e86c760aa26d42">
+    
     <meta name="description" content="Earn money online by completing surveys, tasks, and offers. Instant payout via UPI and Crypto USDT BEP20." />
     <meta name="keywords" content="gpt site, make money online, cpx research, timewall, adgem, survey rewards, crypto earnings, usdt bep20" />
     <meta name="author" content="EarnApp" />
@@ -54,6 +59,26 @@
             <button onclick="openCpxOfferwall()" style="background: #ff9800; font-weight: bold;">📋 Open Surveys (CPX)</button>
             <button onclick="openTimewall()" style="background: #3498db; font-weight: bold;">⏱️ Open Timewall Tasks</button>
             <button onclick="openAdgem()" style="background: #9b59b6; font-weight: bold;">🎮 Open Games & Apps (AdGem)</button>
+        </div>
+        
+        <!-- INSTANT AD BOX WITH STRICT 30 SEC TIMER -->
+        <div class="card" style="border: 2px solid #28a745; background: #e8f5e9;">
+            <h3>📺 Instant Ad Rewards</h3>
+            <p id="adStatusText" style="font-weight: bold; color: #333;">Available: Monetag Ad 1</p>
+            
+            <button id="watchAdBtn" onclick="startAdTimer()" style="background: #28a745; font-weight: bold; font-size: 18px;">
+                ▶ Watch Ad & Earn ₹2
+            </button>
+
+            <p id="adCountdownText" style="color: #d35400; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
+                ⏳ Please wait <span id="adSeconds">30</span> seconds... (Don't close ad!)
+            </p>
+
+            <button id="claimAdBtn" onclick="claimAdReward()" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
+                🎁 Claim 40 Coins (₹2)
+            </button>
+
+            <p id="adTimerDisplay" style="color: red; font-weight: bold; margin-top: 10px; display: none;"></p>
         </div>
 
         <div class="card">
@@ -146,7 +171,130 @@
             }
         });
 
-        // Original Purana Balance & Calculation Logic
+        // ---------------- INSTANT AD BOX LOGIC (STRICT 30 SECONDS + COIN REWARD) ---------------- //
+        
+        const monetagLink = "https://omg10.com/4/11740471"; 
+        const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
+
+        window.checkAdStatus = () => {
+            const cooldownTime = localStorage.getItem("adCooldownEnd");
+            const btn = document.getElementById("watchAdBtn");
+            const statusText = document.getElementById("adStatusText");
+            const timerDisplay = document.getElementById("adTimerDisplay");
+            const countdownText = document.getElementById("adCountdownText");
+            const claimBtn = document.getElementById("claimAdBtn");
+
+            countdownText.style.display = "none";
+            claimBtn.style.display = "none";
+
+            if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
+                btn.style.display = "none";
+                statusText.innerText = "⏳ Next Ads Locked (12 Hours Gap)";
+                timerDisplay.style.display = "block";
+                
+                const interval = setInterval(() => {
+                    const now = Date.now();
+                    const distance = parseInt(cooldownTime) - now;
+                    
+                    if (distance <= 0) {
+                        clearInterval(interval);
+                        localStorage.removeItem("adCooldownEnd");
+                        localStorage.setItem("adStep", "1");
+                        window.checkAdStatus();
+                    } else {
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        timerDisplay.innerText = `Come back in: ${hours}h ${minutes}m ${seconds}s`;
+                    }
+                }, 1000);
+            } else {
+                btn.style.display = "inline-block";
+                timerDisplay.style.display = "none";
+                
+                let step = localStorage.getItem("adStep") || "1";
+                if (step === "1") {
+                    statusText.innerText = "🟢 Available: Monetag Ad (1/2)";
+                    btn.innerText = "▶ Watch Monetag Ad & Earn ₹2";
+                } else if (step === "2") {
+                    statusText.innerText = "🔵 Available: Adsterra Ad (2/2)";
+                    btn.innerText = "▶ Watch Adsterra Ad & Earn ₹2";
+                }
+            }
+        };
+
+        window.startAdTimer = () => {
+            if(!window.userId) return alert("Please login first to watch ads!");
+
+            let step = localStorage.getItem("adStep") || "1";
+            let adLink = (step === "1") ? monetagLink : adsterraLink;
+            
+            window.open(adLink, "_blank");
+
+            document.getElementById("watchAdBtn").style.display = "none";
+            document.getElementById("adCountdownText").style.display = "block";
+            
+            let timeLeft = 30;
+            document.getElementById("adSeconds").innerText = timeLeft;
+
+            let countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("adSeconds").innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("adCountdownText").style.display = "none";
+                    document.getElementById("claimAdBtn").style.display = "inline-block";
+                }
+            }, 1000);
+        };
+
+        // NEW REWARD FUNCTION WITH API CALL
+        window.claimAdReward = async () => {
+            let step = localStorage.getItem("adStep") || "1";
+            const rewardCoins = 40; // 40 coins = ₹2
+
+            try {
+                // Backend call to add 40 coins (Aapko Render par yeh route banana hoga)
+                const res = await fetch(`${backendUrl}/api/addCoins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: window.userId, 
+                        coins: rewardCoins, 
+                        description: `Watched Instant Ad (${step}/2)` 
+                    })
+                });
+
+                if(res.ok) {
+                    alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
+                    window.fetchBalance();       // Screen update
+                    window.loadTransactions();   // History update
+                } else {
+                    alert(`✅ Task Done! (Lekin API error ki wajah se Coins add nahi hue. Check backend.)`);
+                }
+            } catch (error) {
+                console.error("Error adding coins:", error);
+                alert(`✅ Task Done! (Coins tab milenge jab aapka Backend addCoins route ready hoga!)`);
+            }
+
+            // Logic to move to next ad or lock for 12 hours
+            if (step === "1") {
+                localStorage.setItem("adStep", "2");
+                window.checkAdStatus();
+            } else if (step === "2") {
+                const twelveHoursInMs = 12 * 60 * 60 * 1000;
+                localStorage.setItem("adCooldownEnd", Date.now() + twelveHoursInMs);
+                localStorage.setItem("adStep", "1"); 
+                window.checkAdStatus();
+            }
+        };
+
+        document.addEventListener("DOMContentLoaded", () => {
+            setTimeout(() => window.checkAdStatus(), 1000);
+        });
+
+        // ---------------- OLD BALANCE AND WITHDRAWAL LOGIC ---------------- //
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -192,7 +340,6 @@
             window.open(`https://api.adgem.com/v1/wall?appid=33567&playerid=${window.userId}`, '_blank');
         };
 
-        // NEW UPDATED WITHDRAWAL FUNCTION
         window.requestWithdrawal = async () => {
             const method = document.getElementById("withdrawMethod").value;
             const destElement = document.getElementById("destinationInput");
@@ -206,7 +353,6 @@
             const destination = destElement.value.trim();
             const points = pointsElement.value.trim();
             
-            // Yahan naya error message laga diya hai test karne ke liye
             if (destination === "" || points === "") {
                 alert("⚠️ Error: UPI ID aur Points dono box bharna zaroori hai!");
                 return;
