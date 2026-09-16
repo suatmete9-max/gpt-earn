@@ -63,15 +63,16 @@
         
         <!-- INSTANT AD BOX WITH STRICT 30 SEC TIMER -->
         <div class="card" style="border: 2px solid #28a745; background: #e8f5e9;">
-            <h3>📺 Instant Ad Rewards</h3>
-            <p id="adStatusText" style="font-weight: bold; color: #333;">Available: Monetag Ad 1</p>
+            <h3>📺 Premium Daily Ads</h3>
+            <p style="color: #d35400; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 4 Ads Limit | Earn ₹8 (160 Coins) daily</p>
+            <p id="adStatusText" style="font-weight: bold; color: #333;">Available: Premium Ad (1/2)</p>
             
             <button id="watchAdBtn" onclick="startAdTimer()" style="background: #28a745; font-weight: bold; font-size: 18px;">
                 ▶ Watch Ad & Earn ₹2
             </button>
 
             <p id="adCountdownText" style="color: #d35400; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
-                ⏳ Please wait <span id="adSeconds">30</span> seconds... (Don't close ad!)
+                ⏳ Ad is running... Please wait <span id="adSeconds">30</span> sec.
             </p>
 
             <button id="claimAdBtn" onclick="claimAdReward()" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
@@ -171,7 +172,7 @@
             }
         });
 
-        // ---------------- INSTANT AD BOX LOGIC (STRICT 30 SECONDS + COIN REWARD) ---------------- //
+        // ---------------- INSTANT AD BOX LOGIC ---------------- //
         
         const monetagLink = "https://omg10.com/4/11740471"; 
         const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
@@ -214,11 +215,11 @@
                 
                 let step = localStorage.getItem("adStep") || "1";
                 if (step === "1") {
-                    statusText.innerText = "🟢 Available: Monetag Ad (1/2)";
-                    btn.innerText = "▶ Watch Monetag Ad & Earn ₹2";
+                    statusText.innerText = "🟢 Available: Premium Ad (1/2)";
+                    btn.innerText = "▶ Watch Ad & Earn ₹2";
                 } else if (step === "2") {
-                    statusText.innerText = "🔵 Available: Adsterra Ad (2/2)";
-                    btn.innerText = "▶ Watch Adsterra Ad & Earn ₹2";
+                    statusText.innerText = "🔵 Available: Premium Ad (2/2)";
+                    btn.innerText = "▶ Watch Ad & Earn ₹2";
                 }
             }
         };
@@ -249,36 +250,35 @@
             }, 1000);
         };
 
-        // NEW REWARD FUNCTION WITH API CALL
         window.claimAdReward = async () => {
             let step = localStorage.getItem("adStep") || "1";
-            const rewardCoins = 40; // 40 coins = ₹2
+            const rewardCoins = 40; 
 
             try {
-                // Backend call to add 40 coins (Aapko Render par yeh route banana hoga)
                 const res = await fetch(`${backendUrl}/api/addCoins`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         userId: window.userId, 
                         coins: rewardCoins, 
-                        description: `Watched Instant Ad (${step}/2)` 
+                        description: `Watched Premium Ad (${step}/2)` 
                     })
                 });
 
                 if(res.ok) {
                     alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
-                    window.fetchBalance();       // Screen update
-                    window.loadTransactions();   // History update
+                    window.fetchBalance();       
+                    window.loadTransactions();   
                 } else {
-                    alert(`✅ Task Done! (Lekin API error ki wajah se Coins add nahi hue. Check backend.)`);
+                    // Custom Alert set per user request
+                    alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
                 }
             } catch (error) {
                 console.error("Error adding coins:", error);
-                alert(`✅ Task Done! (Coins tab milenge jab aapka Backend addCoins route ready hoga!)`);
+                // Custom Alert set per user request
+                alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
             }
 
-            // Logic to move to next ad or lock for 12 hours
             if (step === "1") {
                 localStorage.setItem("adStep", "2");
                 window.checkAdStatus();
