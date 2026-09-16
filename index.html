@@ -146,7 +146,7 @@
             }
         });
 
-        // Fetch Balance & 50% Margin Calculation Function
+        // Original Purana Balance & Calculation Logic
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -154,15 +154,11 @@
                 const data = await response.json();
                 const coins = data.balance || 0;
 
-                // 1. Coins 100% pure show honge
                 document.getElementById("balanceDisplay").innerText = coins;
 
-                // 2. INR aur USDT ke liye 50% Margin Calculation (2000 coins = $1 base, uska 50% user value)
-                const totalUsd = coins / 2000;
-                const usdtVal = (totalUsd * 0.50).toFixed(2); // 50% user share USDT
-                const inrVal = (usdtVal * 83).toFixed(2);      // USDT to INR ($1 = ₹83)
+                const inrVal = (coins * (100 / 2000)).toFixed(2);
+                const usdtVal = (coins / 2000).toFixed(2);
 
-                // 3. Screen par values push karo
                 document.getElementById("inrDisplay").innerText = inrVal;
                 document.getElementById("usdtDisplay").innerText = usdtVal;
 
@@ -196,10 +192,19 @@
             window.open(`https://api.adgem.com/v1/wall?appid=33567&playerid=${window.userId}`, '_blank');
         };
 
+        // FIXED: Withdrawal function jo exact IDs ('destinationInput' aur 'withdrawPoints') uthayega
         window.requestWithdrawal = async () => {
             const method = document.getElementById("withdrawMethod").value;
-            const destination = document.getElementById("destinationInput").value.trim();
-            const points = document.getElementById("withdrawPoints").value.trim();
+            const destElement = document.getElementById("destinationInput");
+            const pointsElement = document.getElementById("withdrawPoints");
+            
+            if (!destElement || !pointsElement) {
+                alert("Form elements not found!");
+                return;
+            }
+
+            const destination = destElement.value.trim();
+            const points = pointsElement.value.trim();
             
             if (!destination || !points) {
                 alert("UPI ID aur Points daalna zaroori hai!");
@@ -230,6 +235,7 @@
                 const tbody = document.getElementById("historyTableBody");
                 tbody.innerHTML = "";
 
+                if (!data) return;
                 const keys = Object.keys(data).reverse();
                 if(keys.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4">No transactions found</td></tr>`;
