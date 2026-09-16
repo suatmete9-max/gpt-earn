@@ -40,7 +40,10 @@
         <div class="card">
             <h1>Welcome, <span id="userName">User</span>!</h1>
             <p>Your Current Balance:</p>
-            <div class="balance">🪙 <span id="balanceDisplay">Loading...</span> Coins</div>
+<div class="balance">🪙 <span id="balanceDisplay">0</span> Coins</div>
+<div style="font-size: 14px; color: #555; margin-top: 5px;">
+    🇮🇳 ₹<span id="inrDisplay">0.00</span> INR | 💵 $<span id="usdtDisplay">0.00</span> USDT
+</div>
             <button onclick="fetchBalance()">Refresh Balance</button>
             <button onclick="loadTransactions()" style="background: #17a2b8;">View History</button>
             <button onclick="logout()" style="background: #e74c3c;">Logout</button>
@@ -142,7 +145,30 @@
                 appSection.style.display = "none";
             }
         });
+window.fetchBalance = async () => {
+    if(!window.userId) return;
+    try {
+        const res = await fetch(`${backendUrl}/api/balance/${window.userId}`);
+        const data = await res.json();
+        const coins = data.balance || 0;
+        
+        // Coins display update karo
+        document.getElementById("balanceDisplay").innerText = coins;
 
+        // Automatic INR & USDT Calculation
+        // 778 coins = 100 INR -> 1 coin = 100 / 778 = 0.1285 INR
+        const inrValue = (coins * (100 / 778)).toFixed(2);
+        
+        // 700 coins = 1 USDT -> 1 coin = 1 / 800 = 0.001428 USDT
+        const usdtValue = (coins / 800).toFixed(2);
+
+        document.getElementById("inrDisplay").innerText = inrValue;
+        document.getElementById("usdtDisplay").innerText = usdtValue;
+
+    } catch (error) {
+        console.error("Balance fetch error:", error);
+    }
+};
         window.fetchBalance = async () => {
             if(!window.userId) return;
             try {
