@@ -12,7 +12,7 @@
     <meta name="monetag" content="dcd725b774f1602ee3e86c760aa26d42">
     
     <meta name="description" content="Earn money online by completing surveys, tasks, and offers. Instant payout via UPI and Crypto USDT BEP20." />
-    <meta name="keywords" content="gpt site, make money online, cpx research, timewall, adgem, survey rewards, crypto earnings, usdt bep20" />
+    <meta name="keywords" content="gpt site, make money online, cpalead, cpx research, timewall, adgem, survey rewards, crypto earnings, usdt bep20" />
     <meta name="author" content="EarnApp" />
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; background-color: #f4f4f9; }
@@ -56,6 +56,8 @@
 
         <div class="card offerwall">
             <h3>📋 Earning Walls</h3>
+            <!-- CPALead Offerwall Button Added Below -->
+            <button onclick="openCpaleadOfferwall()" style="background: #28a745; font-weight: bold; font-size: 17px;">🔥 Open CPAlead Tasks & Apps</button>
             <button onclick="openCpxOfferwall()" style="background: #ff9800; font-weight: bold;">📋 Open Surveys (CPX)</button>
             <button onclick="openTimewall()" style="background: #3498db; font-weight: bold;">⏱️ Open Timewall Tasks</button>
             <button onclick="openAdgem()" style="background: #9b59b6; font-weight: bold;">🎮 Open Games & Apps (AdGem)</button>
@@ -147,7 +149,6 @@
         window.userId = null; 
         const backendUrl = "https://earnapp-backend.onrender.com";
 
-        // Global interval variable taaki logout hone par purana timer ruk jaye
         window.adTimerInterval = null;
 
         loginBtn.addEventListener("click", () => {
@@ -159,7 +160,6 @@
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
                 window.userId = null;
-                // Logout hote hi pichle user ka timer interval stop kar do
                 if(window.adTimerInterval) clearInterval(window.adTimerInterval);
             });
         };
@@ -173,7 +173,6 @@
                 
                 window.fetchBalance();
                 window.loadTransactions();
-                // User login hote hi uska personal Ad Status check hoga
                 window.checkAdStatus();
             } else {
                 loginSection.style.display = "inline-block";
@@ -187,10 +186,8 @@
         const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
 
         window.checkAdStatus = () => {
-            // Agar user login nahi hai, toh kuch mat karo
             if (!window.userId) return;
 
-            // Har user ke liye uski ID ke sath alag naam se save hoga
             const cooldownKey = `adCooldownEnd_${window.userId}`;
             const stepKey = `adStep_${window.userId}`;
 
@@ -204,7 +201,6 @@
             countdownText.style.display = "none";
             claimBtn.style.display = "none";
 
-            // Purana chal raha koi bhi interval clear kar do
             if(window.adTimerInterval) clearInterval(window.adTimerInterval);
 
             if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
@@ -220,7 +216,7 @@
                         clearInterval(window.adTimerInterval);
                         localStorage.removeItem(cooldownKey);
                         localStorage.setItem(stepKey, "1");
-                        window.checkAdStatus(); // Timer end par khud refresh ho jayega
+                        window.checkAdStatus();
                     } else {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -302,7 +298,6 @@
                 alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
             }
 
-            // Sirf current user ka step aage badhao ya lock karo
             if (step === "1") {
                 localStorage.setItem(stepKey, "2");
                 window.checkAdStatus();
@@ -314,10 +309,7 @@
             }
         };
 
-        // DOM load hone par error bachane ke liye pehle delay wait tha,
-        // Ab zarurat nahi kyunki onAuthStateChanged khud call karega.
-
-        // ---------------- OLD BALANCE AND WITHDRAWAL LOGIC ---------------- //
+        // ---------------- OFFERWALLS & BALANCE LOGIC ---------------- //
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -346,6 +338,12 @@
             } else {
                 destInput.placeholder = "Enter USDT BEP20 Wallet Address";
             }
+        };
+
+        // 🟢 CPALead Offerwall Integration with subid
+        window.openCpaleadOfferwall = () => {
+            if(!window.userId) return alert("Please login first!");
+            window.open(`https://www.cdndn.com/wall/pQRbr?subid=${window.userId}`, '_blank');
         };
 
         window.openCpxOfferwall = () => {
