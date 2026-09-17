@@ -21,6 +21,7 @@
         .balance { font-size: 24px; color: #28a745; font-weight: bold; margin: 15px 0; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; width: 90%; }
         button:hover { background: #0056b3; }
+        button:disabled { background: #cccccc !important; cursor: not-allowed; }
         .google-btn { background: #db4437; width: 100%; }
         .google-btn:hover { background: #c23321; }
         .offerwall { padding: 20px; background: #fff3cd; border-radius: 10px; border: 1px solid #ffeeba; }
@@ -65,20 +66,20 @@
         </div>
         
         <!-- 🟢 BOX 1: MONETAG ADS BOX (3 ADS, 8 HOURS GAP) -->
-        <div class="card" style="border: 2px solid #ff9800; background: #fff8e1;">
+        <div class="card" id="monetagCard" style="border: 2px solid #ff9800; background: #fff8e1;">
             <h3>📺 Monetag Daily Ads</h3>
             <p style="color: #d35400; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 3 Ads | 8 Hours Gap per Ad</p>
             <p id="monetagStatusText" style="font-weight: bold; color: #333;">Available: Monetag Ad (1/3)</p>
             
-            <button id="watchMonetagBtn" onclick="startMonetagAdTimer()" style="background: #ff9800; font-weight: bold; font-size: 17px;">
+            <button id="watchMonetagBtn" onclick="startAdTimer('monetag')" style="background: #ff9800; font-weight: bold; font-size: 17px;">
                 ▶ Watch Monetag Ad & Earn ₹2
             </button>
 
             <p id="monetagCountdownText" style="color: #d35400; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
-                ⏳ Ad running... Please wait <span id="monetagSeconds">30</span> sec.
+                ⏳ Ad running... Keep ad open for <span id="monetagSeconds">35</span> sec.
             </p>
 
-            <button id="claimMonetagBtn" onclick="claimMonetagReward()" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
+            <button id="claimMonetagBtn" onclick="claimAdReward('monetag')" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
                 🎁 Claim 40 Coins (₹2)
             </button>
 
@@ -86,20 +87,20 @@
         </div>
 
         <!-- 🔵 BOX 2: ADSTERRA ADS BOX (3 ADS, 8 HOURS GAP) -->
-        <div class="card" style="border: 2px solid #007bff; background: #e3f2fd;">
+        <div class="card" id="adsterraCard" style="border: 2px solid #007bff; background: #e3f2fd;">
             <h3>📺 Adsterra Daily Ads</h3>
             <p style="color: #0277bd; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 3 Ads | 8 Hours Gap per Ad</p>
             <p id="adsterraStatusText" style="font-weight: bold; color: #333;">Available: Adsterra Ad (1/3)</p>
             
-            <button id="watchAdsterraBtn" onclick="startAdsterraAdTimer()" style="background: #007bff; font-weight: bold; font-size: 17px;">
+            <button id="watchAdsterraBtn" onclick="startAdTimer('adsterra')" style="background: #007bff; font-weight: bold; font-size: 17px;">
                 ▶ Watch Adsterra Ad & Earn ₹2
             </button>
 
             <p id="adsterraCountdownText" style="color: #0277bd; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
-                ⏳ Ad running... Please wait <span id="adsterraSeconds">30</span> sec.
+                ⏳ Ad running... Keep ad open for <span id="adsterraSeconds">35</span> sec.
             </p>
 
-            <button id="claimAdsterraBtn" onclick="claimAdsterraReward()" style="background: #28a745; font-weight: bold; font-size: 18px; display: none;">
+            <button id="claimAdsterraBtn" onclick="claimAdReward('adsterra')" style="background: #28a745; font-weight: bold; font-size: 18px; display: none;">
                 🎁 Claim 40 Coins (₹2)
             </button>
 
@@ -172,9 +173,15 @@
         window.userId = null; 
         const backendUrl = "https://earnapp-backend.onrender.com";
 
-        // Separate interval variables
-        window.monetagTimerInterval = null;
-        window.adsterraTimerInterval = null;
+        // Global Tracking & Security State
+        window.activeAdNetwork = null;      // 'monetag' ya 'adsterra'
+        window.adStartTime = 0;             // Timestamp jab link open hua
+        window.activeCountdownInterval = null;
+        window.REQUIRED_STAY_SECONDS = 35;  // 35 Seconds strict stay requirement
+        const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+
+        const monetagLink = "https://omg10.com/4/11740471"; 
+        const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862";
 
         loginBtn.addEventListener("click", () => {
             signInWithPopup(auth, provider).catch(error => alert(error.message));
@@ -185,8 +192,7 @@
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
                 window.userId = null;
-                if(window.monetagTimerInterval) clearInterval(window.monetagTimerInterval);
-                if(window.adsterraTimerInterval) clearInterval(window.adsterraTimerInterval);
+                resetActiveAdSession();
             });
         };
 
@@ -207,256 +213,239 @@
             }
         });
 
-        // ==========================================
-        // 1. MONETAG ADS LOGIC (3 ADS, 8 HOURS GAP)
-        // ==========================================
-        const monetagLink = "https://omg10.com/4/11740471"; 
-        const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+        // ========================================================
+        // 🛡️ ANTI-CHEAT: EARLY RETURN & MULTI-AD BLOCK SYSTEM
+        // ========================================================
+        function resetActiveAdSession() {
+            if (window.activeCountdownInterval) {
+                clearInterval(window.activeCountdownInterval);
+                window.activeCountdownInterval = null;
+            }
+            window.activeAdNetwork = null;
+            window.adStartTime = 0;
 
+            // Dono cards ka UI default state par restore karo
+            document.getElementById("monetagCountdownText").style.display = "none";
+            document.getElementById("claimMonetagBtn").style.display = "none";
+            document.getElementById("adsterraCountdownText").style.display = "none";
+            document.getElementById("claimAdsterraBtn").style.display = "none";
+
+            window.checkMonetagStatus();
+            window.checkAdsterraStatus();
+        }
+
+        // Jab user wapas website ke tab par aaye:
+        window.addEventListener("focus", () => {
+            if (window.activeAdNetwork && window.adStartTime > 0) {
+                const elapsedSeconds = Math.floor((Date.now() - window.adStartTime) / 1000);
+                
+                // Agar 35 second se pehle user website par wapas aa gaya
+                if (elapsedSeconds < window.REQUIRED_STAY_SECONDS) {
+                    resetActiveAdSession();
+                    alert("⚠️ Task Failed! Aap ad se time se pehle wapas aa gaye.\n\nReward pane ke liye ad ko kam se kam 35-40 seconds tak check karna zaroori hai. Dobara try karein!");
+                }
+            }
+        });
+
+        // ========================================================
+        // 🟢 AD START TIMER (STRICT ONE AT A TIME)
+        // ========================================================
+        window.startAdTimer = (network) => {
+            if (!window.userId) return alert("Please login first!");
+
+            // Agar pehle se koi doosra ad chal raha hai toh block karo
+            if (window.activeAdNetwork) {
+                return alert("⚠️ Ek time par sirf ek ad chal sakta hai! Pehle chal rahe ad ko complete hone dein.");
+            }
+
+            window.activeAdNetwork = network;
+            window.adStartTime = Date.now();
+
+            const isMonetag = (network === 'monetag');
+            const targetLink = isMonetag ? monetagLink : adsterraLink;
+            
+            // Dusre network ka button disable karo taaki parallel click na ho
+            if (isMonetag) {
+                document.getElementById("watchMonetagBtn").style.display = "none";
+                document.getElementById("monetagCountdownText").style.display = "block";
+                document.getElementById("watchAdsterraBtn").disabled = true;
+            } else {
+                document.getElementById("watchAdsterraBtn").style.display = "none";
+                document.getElementById("adsterraCountdownText").style.display = "block";
+                document.getElementById("watchMonetagBtn").disabled = true;
+            }
+
+            // Naye tab mein ad kholo
+            window.open(targetLink, "_blank");
+
+            let timeLeft = window.REQUIRED_STAY_SECONDS;
+            const secSpan = document.getElementById(isMonetag ? "monetagSeconds" : "adsterraSeconds");
+            secSpan.innerText = timeLeft;
+
+            window.activeCountdownInterval = setInterval(() => {
+                timeLeft--;
+                secSpan.innerText = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(window.activeCountdownInterval);
+                    window.activeCountdownInterval = null;
+
+                    if (isMonetag) {
+                        document.getElementById("monetagCountdownText").style.display = "none";
+                        document.getElementById("claimMonetagBtn").style.display = "inline-block";
+                    } else {
+                        document.getElementById("adsterraCountdownText").style.display = "none";
+                        document.getElementById("claimAdsterraBtn").style.display = "inline-block";
+                    }
+                }
+            }, 1000);
+        };
+
+        // ========================================================
+        // 🎁 CLAIM REWARD LOGIC
+        // ========================================================
+        window.claimAdReward = async (network) => {
+            if (!window.userId) return;
+
+            // Exact duration check
+            const elapsed = (Date.now() - window.adStartTime) / 1000;
+            if (elapsed < (window.REQUIRED_STAY_SECONDS - 1)) {
+                resetActiveAdSession();
+                return alert("⚠️ Cheat detected: Minimum 35 seconds requirement poora nahi hua.");
+            }
+
+            const stepKey = `${network}Step_${window.userId}`;
+            const cooldownKey = `${network}CooldownEnd_${window.userId}`;
+            let step = parseInt(localStorage.getItem(stepKey) || "1");
+            const rewardCoins = 40; 
+
+            const networkName = network === 'monetag' ? 'Monetag' : 'Adsterra';
+
+            try {
+                const res = await fetch(`${backendUrl}/api/addCoins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: window.userId, 
+                        coins: rewardCoins, 
+                        description: `Watched ${networkName} Ad (${step}/3)` 
+                    })
+                });
+
+                if (res.ok) {
+                    alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
+                    window.fetchBalance();       
+                    window.loadTransactions();   
+                } else {
+                    alert(`✅ Task complete!`);
+                }
+            } catch (error) {
+                console.error("Error adding coins:", error);
+            }
+
+            // Cooldown of 8 Hours set karo
+            localStorage.setItem(cooldownKey, Date.now() + EIGHT_HOURS_MS);
+
+            // Cycle increment (1 -> 2 -> 3 -> 1)
+            if (step >= 3) {
+                localStorage.setItem(stepKey, "1");
+            } else {
+                localStorage.setItem(stepKey, (step + 1).toString());
+            }
+
+            resetActiveAdSession();
+        };
+
+        // ========================================================
+        // STATUS & COOLDOWN TIMERS
+        // ========================================================
         window.checkMonetagStatus = () => {
             if (!window.userId) return;
 
             const cooldownKey = `monetagCooldownEnd_${window.userId}`;
             const stepKey = `monetagStep_${window.userId}`;
-
             const cooldownTime = localStorage.getItem(cooldownKey);
+
             const btn = document.getElementById("watchMonetagBtn");
             const statusText = document.getElementById("monetagStatusText");
             const timerDisplay = document.getElementById("monetagTimerDisplay");
-            const countdownText = document.getElementById("monetagCountdownText");
-            const claimBtn = document.getElementById("claimMonetagBtn");
-
-            countdownText.style.display = "none";
-            claimBtn.style.display = "none";
-
-            if(window.monetagTimerInterval) clearInterval(window.monetagTimerInterval);
 
             if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
                 btn.style.display = "none";
                 statusText.innerText = "⏳ Next Monetag Ad Locked (8 Hours Gap)";
                 timerDisplay.style.display = "block";
                 
-                window.monetagTimerInterval = setInterval(() => {
-                    const now = Date.now();
-                    const distance = parseInt(cooldownTime) - now;
-                    
+                const interval = setInterval(() => {
+                    const distance = parseInt(cooldownTime) - Date.now();
                     if (distance <= 0) {
-                        clearInterval(window.monetagTimerInterval);
+                        clearInterval(interval);
                         localStorage.removeItem(cooldownKey);
                         window.checkMonetagStatus();
                     } else {
-                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        timerDisplay.innerText = `Available in: ${hours}h ${minutes}m ${seconds}s`;
+                        const h = Math.floor(distance / (1000 * 60 * 60));
+                        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((distance % (1000 * 60)) / 1000);
+                        timerDisplay.innerText = `Available in: ${h}h ${m}m ${s}s`;
                     }
                 }, 1000);
             } else {
-                btn.style.display = "inline-block";
+                if (!window.activeAdNetwork) {
+                    btn.disabled = false;
+                    btn.style.display = "inline-block";
+                }
                 timerDisplay.style.display = "none";
                 
                 let step = parseInt(localStorage.getItem(stepKey) || "1");
-                if (step > 3) {
-                    step = 1;
-                    localStorage.setItem(stepKey, "1");
-                }
+                if (step > 3) step = 1;
                 statusText.innerText = `🟡 Available: Monetag Ad (${step}/3)`;
-                btn.innerText = `▶ Watch Monetag Ad & Earn ₹2`;
             }
         };
-
-        window.startMonetagAdTimer = () => {
-            if(!window.userId) return alert("Please login first!");
-
-            window.open(monetagLink, "_blank");
-
-            document.getElementById("watchMonetagBtn").style.display = "none";
-            document.getElementById("monetagCountdownText").style.display = "block";
-            
-            let timeLeft = 30;
-            document.getElementById("monetagSeconds").innerText = timeLeft;
-
-            let countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById("monetagSeconds").innerText = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById("monetagCountdownText").style.display = "none";
-                    document.getElementById("claimMonetagBtn").style.display = "inline-block";
-                }
-            }, 1000);
-        };
-
-        window.claimMonetagReward = async () => {
-            if(!window.userId) return;
-
-            const stepKey = `monetagStep_${window.userId}`;
-            const cooldownKey = `monetagCooldownEnd_${window.userId}`;
-            let step = parseInt(localStorage.getItem(stepKey) || "1");
-            const rewardCoins = 40; 
-
-            try {
-                const res = await fetch(`${backendUrl}/api/addCoins`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userId: window.userId, 
-                        coins: rewardCoins, 
-                        description: `Watched Monetag Ad (${step}/3)` 
-                    })
-                });
-
-                if(res.ok) {
-                    alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
-                    window.fetchBalance();       
-                    window.loadTransactions();   
-                } else {
-                    alert(`✅ Task Done!`);
-                }
-            } catch (error) {
-                console.error("Error adding coins:", error);
-            }
-
-            // Set 8 Hours Cooldown
-            localStorage.setItem(cooldownKey, Date.now() + EIGHT_HOURS_MS);
-
-            // Step increment
-            if (step >= 3) {
-                localStorage.setItem(stepKey, "1");
-            } else {
-                localStorage.setItem(stepKey, (step + 1).toString());
-            }
-
-            window.checkMonetagStatus();
-        };
-
-        // ==========================================
-        // 2. ADSTERRA ADS LOGIC (3 ADS, 8 HOURS GAP)
-        // ==========================================
-        const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
 
         window.checkAdsterraStatus = () => {
             if (!window.userId) return;
 
             const cooldownKey = `adsterraCooldownEnd_${window.userId}`;
             const stepKey = `adsterraStep_${window.userId}`;
-
             const cooldownTime = localStorage.getItem(cooldownKey);
+
             const btn = document.getElementById("watchAdsterraBtn");
             const statusText = document.getElementById("adsterraStatusText");
             const timerDisplay = document.getElementById("adsterraTimerDisplay");
-            const countdownText = document.getElementById("adsterraCountdownText");
-            const claimBtn = document.getElementById("claimAdsterraBtn");
-
-            countdownText.style.display = "none";
-            claimBtn.style.display = "none";
-
-            if(window.adsterraTimerInterval) clearInterval(window.adsterraTimerInterval);
 
             if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
                 btn.style.display = "none";
                 statusText.innerText = "⏳ Next Adsterra Ad Locked (8 Hours Gap)";
                 timerDisplay.style.display = "block";
                 
-                window.adsterraTimerInterval = setInterval(() => {
-                    const now = Date.now();
-                    const distance = parseInt(cooldownTime) - now;
-                    
+                const interval = setInterval(() => {
+                    const distance = parseInt(cooldownTime) - Date.now();
                     if (distance <= 0) {
-                        clearInterval(window.adsterraTimerInterval);
+                        clearInterval(interval);
                         localStorage.removeItem(cooldownKey);
                         window.checkAdsterraStatus();
                     } else {
-                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        timerDisplay.innerText = `Available in: ${hours}h ${minutes}m ${seconds}s`;
+                        const h = Math.floor(distance / (1000 * 60 * 60));
+                        const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((distance % (1000 * 60)) / 1000);
+                        timerDisplay.innerText = `Available in: ${h}h ${m}m ${s}s`;
                     }
                 }, 1000);
             } else {
-                btn.style.display = "inline-block";
+                if (!window.activeAdNetwork) {
+                    btn.disabled = false;
+                    btn.style.display = "inline-block";
+                }
                 timerDisplay.style.display = "none";
                 
                 let step = parseInt(localStorage.getItem(stepKey) || "1");
-                if (step > 3) {
-                    step = 1;
-                    localStorage.setItem(stepKey, "1");
-                }
+                if (step > 3) step = 1;
                 statusText.innerText = `🔵 Available: Adsterra Ad (${step}/3)`;
-                btn.innerText = `▶ Watch Adsterra Ad & Earn ₹2`;
             }
         };
 
-        window.startAdsterraAdTimer = () => {
-            if(!window.userId) return alert("Please login first!");
-
-            window.open(adsterraLink, "_blank");
-
-            document.getElementById("watchAdsterraBtn").style.display = "none";
-            document.getElementById("adsterraCountdownText").style.display = "block";
-            
-            let timeLeft = 30;
-            document.getElementById("adsterraSeconds").innerText = timeLeft;
-
-            let countdownInterval = setInterval(() => {
-                timeLeft--;
-                document.getElementById("adsterraSeconds").innerText = timeLeft;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById("adsterraCountdownText").style.display = "none";
-                    document.getElementById("claimAdsterraBtn").style.display = "inline-block";
-                }
-            }, 1000);
-        };
-
-        window.claimAdsterraReward = async () => {
-            if(!window.userId) return;
-
-            const stepKey = `adsterraStep_${window.userId}`;
-            const cooldownKey = `adsterraCooldownEnd_${window.userId}`;
-            let step = parseInt(localStorage.getItem(stepKey) || "1");
-            const rewardCoins = 40; 
-
-            try {
-                const res = await fetch(`${backendUrl}/api/addCoins`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        userId: window.userId, 
-                        coins: rewardCoins, 
-                        description: `Watched Adsterra Ad (${step}/3)` 
-                    })
-                });
-
-                if(res.ok) {
-                    alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
-                    window.fetchBalance();       
-                    window.loadTransactions();   
-                } else {
-                    alert(`✅ Task Done!`);
-                }
-            } catch (error) {
-                console.error("Error adding coins:", error);
-            }
-
-            // Set 8 Hours Cooldown
-            localStorage.setItem(cooldownKey, Date.now() + EIGHT_HOURS_MS);
-
-            // Step increment
-            if (step >= 3) {
-                localStorage.setItem(stepKey, "1");
-            } else {
-                localStorage.setItem(stepKey, (step + 1).toString());
-            }
-
-            window.checkAdsterraStatus();
-        };
-
-        // ==========================================
-        // 3. COMMON FUNCTIONS (BALANCE, WITHDRAW, WALLS)
-        // ==========================================
+        // ========================================================
+        // BALANCE, WITHDRAW & OFFERWALL LOGIC
+        // ========================================================
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -465,13 +454,8 @@
                 const coins = data.balance || 0;
 
                 document.getElementById("balanceDisplay").innerText = coins;
-
-                const inrVal = (coins * (100 / 2000)).toFixed(2);
-                const usdtVal = (coins / 2000).toFixed(2);
-
-                document.getElementById("inrDisplay").innerText = inrVal;
-                document.getElementById("usdtDisplay").innerText = usdtVal;
-
+                document.getElementById("inrDisplay").innerText = (coins * (100 / 2000)).toFixed(2);
+                document.getElementById("usdtDisplay").innerText = (coins / 2000).toFixed(2);
             } catch (error) {
                 console.error("Error fetching balance:", error);
             }
@@ -480,11 +464,7 @@
         window.updateWithdrawPlaceholder = () => {
             const method = document.getElementById("withdrawMethod").value;
             const destInput = document.getElementById("destinationInput");
-            if (method === "UPI") {
-                destInput.placeholder = "Enter UPI ID (e.g. user@oksbi)";
-            } else {
-                destInput.placeholder = "Enter USDT BEP20 Wallet Address";
-            }
+            destInput.placeholder = (method === "UPI") ? "Enter UPI ID (e.g. user@oksbi)" : "Enter USDT BEP20 Wallet Address";
         };
 
         window.openCpaleadOfferwall = () => {
@@ -512,17 +492,13 @@
             const destElement = document.getElementById("destinationInput");
             const pointsElement = document.getElementById("withdrawPoints");
             
-            if (!destElement || !pointsElement) {
-                alert("Form elements not found!");
-                return;
-            }
+            if (!destElement || !pointsElement) return alert("Form elements not found!");
 
             const destination = destElement.value.trim();
             const points = pointsElement.value.trim();
             
             if (destination === "" || points === "") {
-                alert("⚠️ Error: UPI ID aur Points dono bharna zaroori hai!");
-                return;
+                return alert("⚠️ Error: UPI ID aur Points dono bharna zaroori hai!");
             }
 
             try {
