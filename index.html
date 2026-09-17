@@ -16,7 +16,7 @@
     <meta name="author" content="EarnApp" />
     <style>
         body { font-family: Arial, sans-serif; text-align: center; margin-top: 30px; background-color: #f4f4f9; }
-        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 320px; margin-bottom: 20px; vertical-align: top; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); display: inline-block; width: 320px; margin-bottom: 20px; vertical-align: top; margin-left: 5px; margin-right: 5px; }
         h1 { color: #333; font-size: 22px; }
         .balance { font-size: 24px; color: #28a745; font-weight: bold; margin: 15px 0; }
         button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 5px; width: 90%; }
@@ -42,6 +42,7 @@
 
     <!-- 2. MAIN APP SECTION -->
     <div id="appSection">
+        <!-- USER BALANCE CARD -->
         <div class="card">
             <h1>Welcome, <span id="userName">User</span>!</h1>
             <p>Your Current Balance:</p>
@@ -54,36 +55,58 @@
             <button onclick="logout()" style="background: #e74c3c;">Logout</button>
         </div>
 
+        <!-- OFFERWALLS CARD -->
         <div class="card offerwall">
             <h3>📋 Earning Walls</h3>
-            <!-- CPALead Offerwall Button Added Below -->
             <button onclick="openCpaleadOfferwall()" style="background: #28a745; font-weight: bold; font-size: 17px;">🔥 Open CPAlead Tasks & Apps</button>
             <button onclick="openCpxOfferwall()" style="background: #ff9800; font-weight: bold;">📋 Open Surveys (CPX)</button>
             <button onclick="openTimewall()" style="background: #3498db; font-weight: bold;">⏱️ Open Timewall Tasks</button>
             <button onclick="openAdgem()" style="background: #9b59b6; font-weight: bold;">🎮 Open Games & Apps (AdGem)</button>
         </div>
         
-        <!-- INSTANT AD BOX WITH STRICT 30 SEC TIMER -->
-        <div class="card" style="border: 2px solid #28a745; background: #e8f5e9;">
-            <h3>📺 Premium Daily Ads</h3>
-            <p style="color: #d35400; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 4 Ads Limit | Earn ₹8 (160 Coins) daily</p>
-            <p id="adStatusText" style="font-weight: bold; color: #333;">Available: Premium Ad (1/2)</p>
+        <!-- 🟢 BOX 1: MONETAG ADS BOX (3 ADS, 8 HOURS GAP) -->
+        <div class="card" style="border: 2px solid #ff9800; background: #fff8e1;">
+            <h3>📺 Monetag Daily Ads</h3>
+            <p style="color: #d35400; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 3 Ads | 8 Hours Gap per Ad</p>
+            <p id="monetagStatusText" style="font-weight: bold; color: #333;">Available: Monetag Ad (1/3)</p>
             
-            <button id="watchAdBtn" onclick="startAdTimer()" style="background: #28a745; font-weight: bold; font-size: 18px;">
-                ▶ Watch Ad & Earn ₹2
+            <button id="watchMonetagBtn" onclick="startMonetagAdTimer()" style="background: #ff9800; font-weight: bold; font-size: 17px;">
+                ▶ Watch Monetag Ad & Earn ₹2
             </button>
 
-            <p id="adCountdownText" style="color: #d35400; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
-                ⏳ Ad is running... Please wait <span id="adSeconds">30</span> sec.
+            <p id="monetagCountdownText" style="color: #d35400; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
+                ⏳ Ad running... Please wait <span id="monetagSeconds">30</span> sec.
             </p>
 
-            <button id="claimAdBtn" onclick="claimAdReward()" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
+            <button id="claimMonetagBtn" onclick="claimMonetagReward()" style="background: #17a2b8; font-weight: bold; font-size: 18px; display: none;">
                 🎁 Claim 40 Coins (₹2)
             </button>
 
-            <p id="adTimerDisplay" style="color: red; font-weight: bold; margin-top: 10px; display: none;"></p>
+            <p id="monetagTimerDisplay" style="color: red; font-weight: bold; margin-top: 10px; display: none;"></p>
         </div>
 
+        <!-- 🔵 BOX 2: ADSTERRA ADS BOX (3 ADS, 8 HOURS GAP) -->
+        <div class="card" style="border: 2px solid #007bff; background: #e3f2fd;">
+            <h3>📺 Adsterra Daily Ads</h3>
+            <p style="color: #0277bd; font-size: 13px; font-weight: bold; margin-bottom: 5px;">Daily 3 Ads | 8 Hours Gap per Ad</p>
+            <p id="adsterraStatusText" style="font-weight: bold; color: #333;">Available: Adsterra Ad (1/3)</p>
+            
+            <button id="watchAdsterraBtn" onclick="startAdsterraAdTimer()" style="background: #007bff; font-weight: bold; font-size: 17px;">
+                ▶ Watch Adsterra Ad & Earn ₹2
+            </button>
+
+            <p id="adsterraCountdownText" style="color: #0277bd; font-weight: bold; font-size: 16px; display: none; margin-top: 10px;">
+                ⏳ Ad running... Please wait <span id="adsterraSeconds">30</span> sec.
+            </p>
+
+            <button id="claimAdsterraBtn" onclick="claimAdsterraReward()" style="background: #28a745; font-weight: bold; font-size: 18px; display: none;">
+                🎁 Claim 40 Coins (₹2)
+            </button>
+
+            <p id="adsterraTimerDisplay" style="color: red; font-weight: bold; margin-top: 10px; display: none;"></p>
+        </div>
+
+        <!-- WITHDRAWAL CARD -->
         <div class="card">
             <h3>💸 Withdraw Funds</h3>
             <select id="withdrawMethod" onchange="updateWithdrawPlaceholder()">
@@ -149,7 +172,9 @@
         window.userId = null; 
         const backendUrl = "https://earnapp-backend.onrender.com";
 
-        window.adTimerInterval = null;
+        // Separate interval variables
+        window.monetagTimerInterval = null;
+        window.adsterraTimerInterval = null;
 
         loginBtn.addEventListener("click", () => {
             signInWithPopup(auth, provider).catch(error => alert(error.message));
@@ -160,7 +185,8 @@
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
                 window.userId = null;
-                if(window.adTimerInterval) clearInterval(window.adTimerInterval);
+                if(window.monetagTimerInterval) clearInterval(window.monetagTimerInterval);
+                if(window.adsterraTimerInterval) clearInterval(window.adsterraTimerInterval);
             });
         };
 
@@ -173,106 +199,101 @@
                 
                 window.fetchBalance();
                 window.loadTransactions();
-                window.checkAdStatus();
+                window.checkMonetagStatus();
+                window.checkAdsterraStatus();
             } else {
                 loginSection.style.display = "inline-block";
                 appSection.style.display = "none";
             }
         });
 
-        // ---------------- INSTANT AD BOX LOGIC (USER SPECIFIC) ---------------- //
-        
+        // ==========================================
+        // 1. MONETAG ADS LOGIC (3 ADS, 8 HOURS GAP)
+        // ==========================================
         const monetagLink = "https://omg10.com/4/11740471"; 
-        const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
+        const EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 
-        window.checkAdStatus = () => {
+        window.checkMonetagStatus = () => {
             if (!window.userId) return;
 
-            const cooldownKey = `adCooldownEnd_${window.userId}`;
-            const stepKey = `adStep_${window.userId}`;
+            const cooldownKey = `monetagCooldownEnd_${window.userId}`;
+            const stepKey = `monetagStep_${window.userId}`;
 
             const cooldownTime = localStorage.getItem(cooldownKey);
-            const btn = document.getElementById("watchAdBtn");
-            const statusText = document.getElementById("adStatusText");
-            const timerDisplay = document.getElementById("adTimerDisplay");
-            const countdownText = document.getElementById("adCountdownText");
-            const claimBtn = document.getElementById("claimAdBtn");
+            const btn = document.getElementById("watchMonetagBtn");
+            const statusText = document.getElementById("monetagStatusText");
+            const timerDisplay = document.getElementById("monetagTimerDisplay");
+            const countdownText = document.getElementById("monetagCountdownText");
+            const claimBtn = document.getElementById("claimMonetagBtn");
 
             countdownText.style.display = "none";
             claimBtn.style.display = "none";
 
-            if(window.adTimerInterval) clearInterval(window.adTimerInterval);
+            if(window.monetagTimerInterval) clearInterval(window.monetagTimerInterval);
 
             if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
                 btn.style.display = "none";
-                statusText.innerText = "⏳ Next Ads Locked (12 Hours Gap)";
+                statusText.innerText = "⏳ Next Monetag Ad Locked (8 Hours Gap)";
                 timerDisplay.style.display = "block";
                 
-                window.adTimerInterval = setInterval(() => {
+                window.monetagTimerInterval = setInterval(() => {
                     const now = Date.now();
                     const distance = parseInt(cooldownTime) - now;
                     
                     if (distance <= 0) {
-                        clearInterval(window.adTimerInterval);
+                        clearInterval(window.monetagTimerInterval);
                         localStorage.removeItem(cooldownKey);
-                        localStorage.setItem(stepKey, "1");
-                        window.checkAdStatus();
+                        window.checkMonetagStatus();
                     } else {
                         const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                         const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
                         const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                        timerDisplay.innerText = `Come back in: ${hours}h ${minutes}m ${seconds}s`;
+                        timerDisplay.innerText = `Available in: ${hours}h ${minutes}m ${seconds}s`;
                     }
                 }, 1000);
             } else {
                 btn.style.display = "inline-block";
                 timerDisplay.style.display = "none";
                 
-                let step = localStorage.getItem(stepKey) || "1";
-                if (step === "1") {
-                    statusText.innerText = "🟢 Available: Premium Ad (1/2)";
-                    btn.innerText = "▶ Watch Ad & Earn ₹2";
-                } else if (step === "2") {
-                    statusText.innerText = "🔵 Available: Premium Ad (2/2)";
-                    btn.innerText = "▶ Watch Ad & Earn ₹2";
+                let step = parseInt(localStorage.getItem(stepKey) || "1");
+                if (step > 3) {
+                    step = 1;
+                    localStorage.setItem(stepKey, "1");
                 }
+                statusText.innerText = `🟡 Available: Monetag Ad (${step}/3)`;
+                btn.innerText = `▶ Watch Monetag Ad & Earn ₹2`;
             }
         };
 
-        window.startAdTimer = () => {
-            if(!window.userId) return alert("Please login first to watch ads!");
+        window.startMonetagAdTimer = () => {
+            if(!window.userId) return alert("Please login first!");
 
-            const stepKey = `adStep_${window.userId}`;
-            let step = localStorage.getItem(stepKey) || "1";
-            let adLink = (step === "1") ? monetagLink : adsterraLink;
-            
-            window.open(adLink, "_blank");
+            window.open(monetagLink, "_blank");
 
-            document.getElementById("watchAdBtn").style.display = "none";
-            document.getElementById("adCountdownText").style.display = "block";
+            document.getElementById("watchMonetagBtn").style.display = "none";
+            document.getElementById("monetagCountdownText").style.display = "block";
             
             let timeLeft = 30;
-            document.getElementById("adSeconds").innerText = timeLeft;
+            document.getElementById("monetagSeconds").innerText = timeLeft;
 
             let countdownInterval = setInterval(() => {
                 timeLeft--;
-                document.getElementById("adSeconds").innerText = timeLeft;
+                document.getElementById("monetagSeconds").innerText = timeLeft;
                 
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
-                    document.getElementById("adCountdownText").style.display = "none";
-                    document.getElementById("claimAdBtn").style.display = "inline-block";
+                    document.getElementById("monetagCountdownText").style.display = "none";
+                    document.getElementById("claimMonetagBtn").style.display = "inline-block";
                 }
             }, 1000);
         };
 
-        window.claimAdReward = async () => {
+        window.claimMonetagReward = async () => {
             if(!window.userId) return;
 
-            const stepKey = `adStep_${window.userId}`;
-            const cooldownKey = `adCooldownEnd_${window.userId}`;
-            
-            let step = localStorage.getItem(stepKey) || "1";
+            const stepKey = `monetagStep_${window.userId}`;
+            const cooldownKey = `monetagCooldownEnd_${window.userId}`;
+            let step = parseInt(localStorage.getItem(stepKey) || "1");
             const rewardCoins = 40; 
 
             try {
@@ -282,7 +303,7 @@
                     body: JSON.stringify({ 
                         userId: window.userId, 
                         coins: rewardCoins, 
-                        description: `Watched Premium Ad (${step}/2)` 
+                        description: `Watched Monetag Ad (${step}/3)` 
                     })
                 });
 
@@ -291,25 +312,151 @@
                     window.fetchBalance();       
                     window.loadTransactions();   
                 } else {
-                    alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
+                    alert(`✅ Task Done!`);
                 }
             } catch (error) {
                 console.error("Error adding coins:", error);
-                alert(`✅ Task Done! (Lekin API error ki wjse coins add nhi ho check backebd)`);
             }
 
-            if (step === "1") {
-                localStorage.setItem(stepKey, "2");
-                window.checkAdStatus();
-            } else if (step === "2") {
-                const twelveHoursInMs = 12 * 60 * 60 * 1000;
-                localStorage.setItem(cooldownKey, Date.now() + twelveHoursInMs);
-                localStorage.setItem(stepKey, "1"); 
-                window.checkAdStatus();
+            // Set 8 Hours Cooldown
+            localStorage.setItem(cooldownKey, Date.now() + EIGHT_HOURS_MS);
+
+            // Step increment
+            if (step >= 3) {
+                localStorage.setItem(stepKey, "1");
+            } else {
+                localStorage.setItem(stepKey, (step + 1).toString());
+            }
+
+            window.checkMonetagStatus();
+        };
+
+        // ==========================================
+        // 2. ADSTERRA ADS LOGIC (3 ADS, 8 HOURS GAP)
+        // ==========================================
+        const adsterraLink = "https://www.profitableratecpmnetwork.com/fsxzuv73x3?key=27b2a2a1b892c53e474e8101e7b5e862"; 
+
+        window.checkAdsterraStatus = () => {
+            if (!window.userId) return;
+
+            const cooldownKey = `adsterraCooldownEnd_${window.userId}`;
+            const stepKey = `adsterraStep_${window.userId}`;
+
+            const cooldownTime = localStorage.getItem(cooldownKey);
+            const btn = document.getElementById("watchAdsterraBtn");
+            const statusText = document.getElementById("adsterraStatusText");
+            const timerDisplay = document.getElementById("adsterraTimerDisplay");
+            const countdownText = document.getElementById("adsterraCountdownText");
+            const claimBtn = document.getElementById("claimAdsterraBtn");
+
+            countdownText.style.display = "none";
+            claimBtn.style.display = "none";
+
+            if(window.adsterraTimerInterval) clearInterval(window.adsterraTimerInterval);
+
+            if (cooldownTime && Date.now() < parseInt(cooldownTime)) {
+                btn.style.display = "none";
+                statusText.innerText = "⏳ Next Adsterra Ad Locked (8 Hours Gap)";
+                timerDisplay.style.display = "block";
+                
+                window.adsterraTimerInterval = setInterval(() => {
+                    const now = Date.now();
+                    const distance = parseInt(cooldownTime) - now;
+                    
+                    if (distance <= 0) {
+                        clearInterval(window.adsterraTimerInterval);
+                        localStorage.removeItem(cooldownKey);
+                        window.checkAdsterraStatus();
+                    } else {
+                        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                        timerDisplay.innerText = `Available in: ${hours}h ${minutes}m ${seconds}s`;
+                    }
+                }, 1000);
+            } else {
+                btn.style.display = "inline-block";
+                timerDisplay.style.display = "none";
+                
+                let step = parseInt(localStorage.getItem(stepKey) || "1");
+                if (step > 3) {
+                    step = 1;
+                    localStorage.setItem(stepKey, "1");
+                }
+                statusText.innerText = `🔵 Available: Adsterra Ad (${step}/3)`;
+                btn.innerText = `▶ Watch Adsterra Ad & Earn ₹2`;
             }
         };
 
-        // ---------------- OFFERWALLS & BALANCE LOGIC ---------------- //
+        window.startAdsterraAdTimer = () => {
+            if(!window.userId) return alert("Please login first!");
+
+            window.open(adsterraLink, "_blank");
+
+            document.getElementById("watchAdsterraBtn").style.display = "none";
+            document.getElementById("adsterraCountdownText").style.display = "block";
+            
+            let timeLeft = 30;
+            document.getElementById("adsterraSeconds").innerText = timeLeft;
+
+            let countdownInterval = setInterval(() => {
+                timeLeft--;
+                document.getElementById("adsterraSeconds").innerText = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById("adsterraCountdownText").style.display = "none";
+                    document.getElementById("claimAdsterraBtn").style.display = "inline-block";
+                }
+            }, 1000);
+        };
+
+        window.claimAdsterraReward = async () => {
+            if(!window.userId) return;
+
+            const stepKey = `adsterraStep_${window.userId}`;
+            const cooldownKey = `adsterraCooldownEnd_${window.userId}`;
+            let step = parseInt(localStorage.getItem(stepKey) || "1");
+            const rewardCoins = 40; 
+
+            try {
+                const res = await fetch(`${backendUrl}/api/addCoins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        userId: window.userId, 
+                        coins: rewardCoins, 
+                        description: `Watched Adsterra Ad (${step}/3)` 
+                    })
+                });
+
+                if(res.ok) {
+                    alert(`🎉 Success! ₹2 (${rewardCoins} Coins) added to your wallet!`);
+                    window.fetchBalance();       
+                    window.loadTransactions();   
+                } else {
+                    alert(`✅ Task Done!`);
+                }
+            } catch (error) {
+                console.error("Error adding coins:", error);
+            }
+
+            // Set 8 Hours Cooldown
+            localStorage.setItem(cooldownKey, Date.now() + EIGHT_HOURS_MS);
+
+            // Step increment
+            if (step >= 3) {
+                localStorage.setItem(stepKey, "1");
+            } else {
+                localStorage.setItem(stepKey, (step + 1).toString());
+            }
+
+            window.checkAdsterraStatus();
+        };
+
+        // ==========================================
+        // 3. COMMON FUNCTIONS (BALANCE, WITHDRAW, WALLS)
+        // ==========================================
         window.fetchBalance = async () => {
             if (!window.userId) return;
             try {
@@ -340,7 +487,6 @@
             }
         };
 
-        // 🟢 CPALead Offerwall Integration with subid
         window.openCpaleadOfferwall = () => {
             if(!window.userId) return alert("Please login first!");
             window.open(`https://www.cdndn.com/wall/pQRbr?subid=${window.userId}`, '_blank');
@@ -375,7 +521,7 @@
             const points = pointsElement.value.trim();
             
             if (destination === "" || points === "") {
-                alert("⚠️ Error: UPI ID aur Points dono box bharna zaroori hai!");
+                alert("⚠️ Error: UPI ID aur Points dono bharna zaroori hai!");
                 return;
             }
 
